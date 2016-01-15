@@ -52,7 +52,6 @@
     <Compile Include="HDMIPowerManager.Designer.cs">
       <DependentUpon>HDMIPowerManager.cs</DependentUpon>
     </Compile>
-    <Compile Include="Program.cs" />
     <Compile Include="ProjectInstaller.cs">
       <SubType>Component</SubType>
     </Compile>
