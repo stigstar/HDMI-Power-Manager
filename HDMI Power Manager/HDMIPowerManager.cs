@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.ServiceProcess;
 
@@ -29,29 +31,43 @@ namespace HDMI_Power_Manager
             _eventLog.Log = "HDMIPowerManagerLog";
         }
 
-       protected override void OnStart(string[] args)
+        static void Main(string[] args)
+        {
+            ServiceBase[] ServicesToRun; ServicesToRun = new ServiceBase[] { new HdmiPowerManager() }; ServiceBase.Run(ServicesToRun);
+        }
+
+
+        protected override void OnStart(string[] args)
         {
             _eventLog.WriteEntry("HDMI Power Manager starting...");
+            File.AppendAllText("c:\\temp\\PowerMonitor.txt", DateTime.Now.ToString(CultureInfo.InvariantCulture) + " : Starting...");
+            File.AppendAllLines("c:\\temp\\PowerMonitor.txt", new[] { string.Empty });
             // Update the service state to Start Pending.
-           var serviceStatus = new ServiceStatus
-           {
-               dwCurrentState = ServiceState.SERVICE_START_PENDING,
-               dwWaitHint = 100000
-           };
+            var serviceStatus = new ServiceStatus
+            {
+                dwCurrentState = ServiceState.SERVICE_START_PENDING,
+                dwWaitHint = 100000
+            };
 
-           SetServiceStatus(ServiceHandle, ref serviceStatus);
+            SetServiceStatus(ServiceHandle, ref serviceStatus);
 
             RegisterForPowerNotifications();
 
             _myCallback = new ServiceControlHandlerEx(ServiceControlHandler);
-            
+
+
+            File.AppendAllText("c:\\temp\\PowerMonitor.txt", DateTime.Now.ToString(CultureInfo.InvariantCulture) + " : _myCallback : " + _myCallback);
+            File.AppendAllLines("c:\\temp\\PowerMonitor.txt", new[] { string.Empty });
+
             serviceStatus.dwCurrentState = ServiceState.SERVICE_RUNNING;
             SetServiceStatus(ServiceHandle, ref serviceStatus);
         }
 
         protected override void OnStop()
         {
-            _eventLog.WriteEntry("HDMI Power Manager starting...");
+            _eventLog.WriteEntry("HDMI Power Manager stopping...");
+            File.AppendAllText("c:\\temp\\PowerMonitor.txt", DateTime.Now.ToString(CultureInfo.InvariantCulture) + " : PowerManager stopping.");
+            File.AppendAllLines("c:\\temp\\PowerMonitor.txt", new[] { string.Empty });
             UnregisterForPowerNotifications();
         }
 
@@ -72,7 +88,18 @@ namespace HDMI_Power_Manager
         private void RegisterForPowerNotifications()
         {
             RegisterServiceCtrlHandlerEx(ServiceName, _myCallback, IntPtr.Zero);
+            File.AppendAllText("c:\\temp\\PowerMonitor.txt", DateTime.Now.ToString(CultureInfo.InvariantCulture) + " : ServiceName : " + ServiceName);
+            File.AppendAllLines("c:\\temp\\PowerMonitor.txt", new[] { string.Empty });
+
+
+
+
             _hConsoleDisplayState = RegisterPowerSettingNotification(ServiceHandle, ref GUID_CONSOLE_DISPLAY_STATE, DEVICE_NOTIFY_SERVICE_HANDLE);
+            File.AppendAllText("c:\\temp\\PowerMonitor.txt", DateTime.Now.ToString(CultureInfo.InvariantCulture) + " : Console display state : " + _hConsoleDisplayState);
+            File.AppendAllLines("c:\\temp\\PowerMonitor.txt", new[] { string.Empty });
+            File.AppendAllText("c:\\temp\\PowerMonitor.txt", DateTime.Now.ToString(CultureInfo.InvariantCulture) + " : GUID_CONSOLE_DISPLAY_STATE : " + GUID_CONSOLE_DISPLAY_STATE);
+            File.AppendAllLines("c:\\temp\\PowerMonitor.txt", new[] { string.Empty });
+            File.AppendAllText("c:\\temp\\PowerMonitor.txt", DateTime.Now.ToString(CultureInfo.InvariantCulture) + " : DEVICE_NOTIFY_SERVICE_HANDLE : " + DEVICE_NOTIFY_SERVICE_HANDLE);
         }
 
         private void UnregisterForPowerNotifications()
@@ -82,17 +109,27 @@ namespace HDMI_Power_Manager
 
         private int ServiceControlHandler(int control, int eventType, IntPtr eventData, IntPtr context)
         {
+            File.AppendAllText("c:\\temp\\PowerMonitor.txt", DateTime.Now.ToString(CultureInfo.InvariantCulture) + " : ServiceControlHandler 1");
+            File.AppendAllLines("c:\\temp\\PowerMonitor.txt", new[] { string.Empty });
+
             if (control == SERVICE_CONTROL_STOP || control == SERVICE_CONTROL_SHUTDOWN)
             {
+                File.AppendAllText("c:\\temp\\PowerMonitor.txt", DateTime.Now.ToString(CultureInfo.InvariantCulture) + " : ServiceControlHandler 2");
+                File.AppendAllLines("c:\\temp\\PowerMonitor.txt", new[] { string.Empty });
                 UnregisterForPowerNotifications();
                 Stop();
             }
-            else if (control == WM_POWERBROADCAST)
+            else if (control == WM_POWERBROADCAST)          
             {
+                File.AppendAllText("c:\\temp\\PowerMonitor.txt", DateTime.Now.ToString(CultureInfo.InvariantCulture) + " : ServiceControlHandler 3");
+                File.AppendAllLines("c:\\temp\\PowerMonitor.txt", new[] { string.Empty });
+
                 switch (eventType)
                 {
                     case WM_POWERBROADCAST:
                         _eventLog.WriteEntry("WM_POWERBROADCAST HAPPENED!");
+                        File.WriteAllLines("c:\\temp\\" + "WM_POWERBROADCAST", new[] { DateTime.Now.ToString() });
+                        File.AppendAllLines("c:\\temp\\PowerMonitor.txt", new[] { string.Empty });
                         break;
                 }
             }
